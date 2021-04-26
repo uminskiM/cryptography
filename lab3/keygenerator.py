@@ -20,7 +20,7 @@ class KeyGenerator:
 
     def generate_public_key(self):
         pubkey = [self.superincreasing_sequence[i] * self.r % self.q for i in range(0, len(self.superincreasing_sequence))]
-        print('Public key: ', pubkey)
+        # print('Public key: ', pubkey)
         return pubkey
 
     def generate_superincreasing_sequence(self):
@@ -30,7 +30,7 @@ class KeyGenerator:
                 number = random.randint(max(2 ** (i + self.security_parameter - 1), sum(self.superincreasing_sequence)) + 1, 2 ** (i + self.security_parameter))
             assert number > sum(self.superincreasing_sequence)
             self.superincreasing_sequence.append(number)
-        print('Superincreasing sequence: ', self.superincreasing_sequence)
+        # print('Superincreasing sequence: ', self.superincreasing_sequence)
         print('Sequence length: ', len(self.superincreasing_sequence))
         return self.superincreasing_sequence
 
