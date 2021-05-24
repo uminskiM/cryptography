@@ -59,6 +59,10 @@ class AESCipherCBC(AESCipher):
         json_v = [x for x in (iv, ciphertext)]
         return dict(zip(json_k, json_v))
 
+    def encrypt_with_iv(self, message, encryption_key, iv):
+        aes = AES.new(encryption_key, AES.MODE_CBC, iv=iv)
+        return aes.encrypt(pad(message, AES.block_size, style='iso7816')), aes.iv
+
     def decrypt(self, encryption_result, encryption_key):
         b64 = json.loads(encryption_result)
         json_k = ['iv', 'ciphertext']
