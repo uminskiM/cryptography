@@ -28,10 +28,10 @@ def GenModulus(w):
 
 
 def GenRSA(w):
-    n = len(w)
     N, p, q = GenModulus(w)
     m = (p - 1) * (q - 1)
     e = 2 ** 16 + 1
+    print('m e', m, e)
     d = modinv(e, m)
     return N, e, d, p, q
 
@@ -68,13 +68,14 @@ def mod_reduce(a, b):
     return a, reductions
 
 
-def sign(m, N, d):
-    sigma = m ** d % N
+def sign(message, N, private_key):
+    sigma = message ** private_key % N
     return sigma
 
 
-def verify(m, s, N, e):
-    return s == (m ** e % N)
+def verify(message, signature, N, public_key):
+    print('m ** e % N', message ** public_key % N)
+    return message == (signature ** public_key % N)
 
 
 def random_element_from_Z(N):
@@ -84,32 +85,36 @@ def random_element_from_Z(N):
     return g
 
 
-def blind_signature_part_one(m, e, N):
-    r = random_element_from_Z(N)
-    return (m * r ** e) % N, r
+def blind_signature_part_one(message, public_key, N):
+    random_element = random_element_from_Z(N)
+    return (message * (random_element ** public_key) % N) % N, random_element
 
 
-def blind_signature_part_two(s, e, N, r):
-    r_inv = modinv(r, N)
-    return s * r_inv % N
+def blind_signature_part_two(signature, N, random_element):
+    r_inv = modinv(random_element, N)
+    return signature * r_inv % N
 
 
-def decSec(c, N, d, e):
-    r = random_element_from_Z(N)
-    mp = dec((c * (r ** e % N)) % N, N, d)
-    r_inv = modinv(r, N)
-    return (mp * r_inv) % N
+def decrypt_securely(ciphertext, N, private_key, public_key):
+    random_element = random_element_from_Z(N)
+    intermediate_decryption = dec((ciphertext * (random_element ** public_key % N)) % N, N, private_key)
+    random_inversed = modinv(random_element, N)
+    return (intermediate_decryption * random_inversed) % N
 
 
-N, e, d, p, q = GenRSA("11111111")
-m = random_element_from_Z(N)
-s = sign(m, N, d)
-print(verify(m, s, N, e))
+N, public_key, private_key, p, q = GenRSA("11111111111111111")
+message = random_element_from_Z(N)
+signature = sign(message, N, private_key)
+print(message, signature, N, public_key, verify(message, signature, N, public_key))
 
-c = enc(m, N, e)
-d = dec(c, N, d)
-print(m, c, d)
+encrypted = enc(message, N, public_key)
+decrypted = dec(encrypted, N, private_key)
+print(message, encrypted, decrypted)
+print(message, encrypted, decrypt_securely(encrypted, N, private_key, public_key))
 
-c = enc(m, N, e)
-d = decSec(c, N, d, e)
-print(m, c, d)
+s1, random_element = blind_signature_part_one(message, public_key, N)
+s2 = sign(s1, N, private_key)
+signature = blind_signature_part_two(s2, N, random_element)
+print(s1, random_element, N)
+print(s2)
+print(message, signature, verify(message, signature, N, public_key))
